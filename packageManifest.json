@@ -1,0 +1,38 @@
+{
+  "packageName": "hubitat_broadlink",
+  "author": "tomw",
+  "version": "0.9.0",
+  "minimumHEVersion": "2.1.9",
+  "dateReleased": "2022-08-04",
+  "bundles": [
+    {
+      "id": "ce13cc15-aee6-4844-b538-2934667f8600",
+      "name": "hubitat_broadlink",
+      "namespace": "tomw",
+      "location": "https://github.com/tomwpublic/hubitat_broadlink/blob/main/hubitat_broadlink.zip?raw=true",
+      "required": true
+    }
+  ],
+  "drivers": [
+    {
+      "id": "4afbd7df-6908-4c77-8295-ac4994bcbab0",
+      "name": "Broadlink Remote",
+      "namespace": "tomw",
+      "location": "https://raw.githubusercontent.com/tomwpublic/hubitat_broadlink/main/broadlinkRemoteDriver",
+      "required": true
+    }
+  ],
+  "apps": [
+    {
+      "id": "59dce00a-4d94-41f5-b2d8-278f9fd108a0",
+      "name": "Broadlink System Manager",
+      "namespace": "tomw",
+      "location": "https://raw.githubusercontent.com/tomwpublic/hubitat_broadlink/main/broadlinkSystemManagerApp",
+      "required": false
+    }  
+  ],
+  "licenseFile": "https://raw.githubusercontent.com/tomwpublic/hubitat_broadlink/main/LICENSE",
+  "releaseNotes": "0.9.0 - tomw - Initial release.",
+  "documentationLink": "https://github.com/tomwpublic/hubitat_broadlink/blob/main/README.md",
+  "communityLink": "TBD"
+}
