@@ -14,6 +14,7 @@ Install using HPM if you can. If you must install manually, follow these steps:
 * In the *Drivers Code* section of Hubitat, install the broadlinkRemoteDriver.
     * In the *Devices* section of Hubitat, add a *New Virtual Device* of type Broadlink Remote.  See below for configuration instructions.
 * If you plan to use multiple Broadlink remotes, install the broadlinkSystemManagerApp in the *Apps Code* section of Hubitat.
+    * In the *Apps* section of Hubitat, click *Add User App* to actually install the Broadlink System Manager app.
     * Wait to fully configure the app until you have installed and configured your virtual devices.
 
 # Virtual Device configuration instructions:
