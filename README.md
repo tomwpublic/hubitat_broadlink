@@ -1,14 +1,18 @@
 # hubitat_broadlink
 
-This provides a Hubitat driver for IR and RF support of Broadlink universal remotes.  A companion Hubitat app is provided to share codes between devices and to import codes saved codes in other formats.
+This provides a Hubitat driver for IR and RF support of Broadlink universal remotes.  A companion Hubitat app is provided to share codes between devices and to import saved codes in other popular formats.
 <br><br>
 The Broadlink device interactions are based on the work shared here: https://github.com/mjg59/python-broadlink
 
-Installing with Hubitat Package Manager (HPM) is recommended.
+Thanks to arnb and Sebastien from the Hubitat forums for all of their testing, feedback, and suggestions.
+
+
 
 # Manual Installation instructions:
 
-Install using HPM if you can. If you must install manually, follow these steps:
+Installing with Hubitat Package Manager (HPM) is recommended.
+
+If you must install manually, follow these steps:
 
 * In the *Bundles* section of hubitat, import the hubitat_broadlink.zip bundle.
 * In the *Drivers Code* section of Hubitat, install the broadlinkRemoteDriver.
