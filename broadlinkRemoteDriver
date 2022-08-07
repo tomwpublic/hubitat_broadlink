@@ -18,7 +18,7 @@ limitations under the License.
 
 Change history:
 
-0.9.1 - tomw - Added PushableButton, where the button "number" is used as a saved code name.
+0.9.1 - tomw - Added PushableButton, which uses the button name as a saved code to send
 0.9.0 - tomw - Initial release.
 
 */
