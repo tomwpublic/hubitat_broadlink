@@ -64,7 +64,7 @@ Learning RF codes takes place in **two steps:** first, the range is swept to fin
 * The `importCodes` command is provided as a migration path from a popular but abandoned previous integration.
     * Copy and paste the full *codeStore* contents into the input field and click the button.
     * Refresh the device page to confirm that your codes were successfully imported.
-* `SendStoredCode` and `SendCode` are provided only for compatibility with existing apps.  They are **not** recommended for new applications.
+* `SendStoredCode`, `SendCode`, and `generateIR` are provided only for compatibility with existing apps.  They are **not** recommended for new applications.
 
 # Usage instructions (system manager app):
 
