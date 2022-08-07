@@ -58,6 +58,7 @@ Learning RF codes takes place in **two steps:** first, the range is swept to fin
 * Use the `sendSavedCode` command to send a code by name that you previously saved.  The Broadlink device will automatically determine whether it is an IR or RF code based on the code content.
     * For IR codes only, the optional 'reps' parameter can be used to automatically repeat the same code multiple times.  The default behavior is to only send the code once.  This parameter is ignored for RF codes.
 * Use the `sendCodeData` command to send a raw hex stream code.  This is useful if you have codes stored in a companion app or driver.
+* Use the `push` command to send a saved code by name.  Enter the code name as the button number parameter.
 <br>
 
 **Compatibility with previous Hubitat integrations**
