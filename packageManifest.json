@@ -32,7 +32,7 @@
     }  
   ],
   "licenseFile": "https://raw.githubusercontent.com/tomwpublic/hubitat_broadlink/main/LICENSE",
-  "releaseNotes": "0.9.1 - tomw - Added PushableButton, where the button \"number\" is used as a saved code name.\n0.9.0 - tomw - Initial release.",
+  "releaseNotes": "0.9.1 - tomw - Added PushableButton, which uses the button name as a saved code to send.\n0.9.0 - tomw - Initial release.",
   "documentationLink": "https://github.com/tomwpublic/hubitat_broadlink/blob/main/README.md",
   "communityLink": "TBD"
 }
