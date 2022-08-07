@@ -1,7 +1,7 @@
 {
   "packageName": "hubitat_broadlink",
   "author": "tomw",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2022-08-04",
   "bundles": [
@@ -32,7 +32,7 @@
     }  
   ],
   "licenseFile": "https://raw.githubusercontent.com/tomwpublic/hubitat_broadlink/main/LICENSE",
-  "releaseNotes": "0.9.0 - tomw - Initial release.",
+  "releaseNotes": "0.9.1 - tomw - Added PushableButton, where the button "number" is used as a saved code name.\n0.9.0 - tomw - Initial release.",
   "documentationLink": "https://github.com/tomwpublic/hubitat_broadlink/blob/main/README.md",
   "communityLink": "TBD"
 }
