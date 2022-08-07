@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+0.9.1 - tomw - Added PushableButton, where the button "number" is used as a saved code name.
 0.9.0 - tomw - Initial release.
 
 */
@@ -28,6 +29,7 @@ metadata
     {
         capability "Actuator"
         capability "Initialize"
+        capability "PushableButton"
         
         command "learnIR"
         
@@ -36,6 +38,7 @@ metadata
         command "sweepRF"
         
         command "sendCodeData", [[name: "code*", type: "STRING"]]
+        command "push", ["name"]
         
         command "clearSavedCodes"
         command "deleteSavedCode", [[name: "name*", type: "STRING"]]
@@ -50,6 +53,7 @@ metadata
         command "SendStoredCode", [[name: "name*", type: "STRING"], [name: "reps", type: "NUMBER"]]
         command "SendCode", ["code"]
         command "generateIR", ["offBurst", "onBurst", "leadIn", "bitmap", "leadOut"]
+        // compatibility for previous integration
         
         attribute "learnedCode", "string"
         attribute "savedCode", "string"
@@ -606,6 +610,15 @@ def saveLearnedCode(name)
     def entry = addSavedCode(name, device.currentValue("learnedCode"))
     
     sendEvent(name: "savedCode", value: entry)
+}
+
+def push(name)
+{
+    if(name instanceof String)
+    {
+        // if button number was a String, try to send a saved code with that name
+        sendSavedCode(name)
+    }
 }
 
 def SendStoredCode(name, reps = 1)
