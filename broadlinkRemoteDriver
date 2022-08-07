@@ -49,6 +49,7 @@ metadata
         command "importCodes", ["codeStore"]
         command "SendStoredCode", [[name: "name*", type: "STRING"], [name: "reps", type: "NUMBER"]]
         command "SendCode", ["code"]
+        command "generateIR", ["offBurst", "onBurst", "leadIn", "bitmap", "leadOut"]
         
         attribute "learnedCode", "string"
         attribute "savedCode", "string"
@@ -560,6 +561,34 @@ def sendCodeResponse(message)
     prepResponse(message)
 }
 
+def generateIR(offBurst, onBurst, leadIn, bitmap, leadOut)
+{
+    if([offBurst, onBurst, leadIn, bitmap, leadOut].contains(null))
+    {
+        logDebug("generateIR: invalid code specs")
+        return null
+    }
+    
+    def code = ""
+    
+    // build the code sequence
+    code += leadIn
+    
+    bitmap.each
+    { code += ((it == "1") ? onBurst : offBurst) }
+    
+    code += leadOut
+    // code sequence complete
+    
+    // apply length and build the actual packet    
+    def len = hubitat.helper.HexUtils.hexStringToByteArray(code).size()
+    len = hubitat.helper.HexUtils.byteArrayToHexString([0xFF & len, 0xFF & (len >> 8)] as byte[])    
+    code = "2600" + len + code + "0D05"
+    
+    logDebug("generateIR: offBurst=${offBurst}, onBurst=${onBurst}, leadIn=${leadIn}, bitmap=${bitmap}, leadOut=${leadOut}")
+    logDebug("generateIR: code = ${code}")
+    sendCodeData(code)
+}
 
 //////////////////////////////////////
 // saved code operations
