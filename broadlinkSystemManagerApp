@@ -256,7 +256,10 @@ def collectCodesFromDevs()
     {
         it.cacheCodesForApp(true)
         Map intCodes = new groovy.json.JsonSlurper().parseText(it.getDataValue("codes"))
-        combinedCodes << intCodes
+        if(intCodes)
+        {
+            combinedCodes << intCodes
+        }
         it.cacheCodesForApp(false)
     }
     
