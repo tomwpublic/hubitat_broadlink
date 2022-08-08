@@ -26,7 +26,7 @@ If you must install manually, follow these steps:
 * On the Broadlink Remote device page, set the preferences:
     * Enter the IP address of your broadlink RM device and click Save Preferences.
     * If your remote has RF functionality (typically named some variation of RM Pro), enabled the "Does your device support RF?" option.
-    * Save Preferences and refresh the page.  If you see this values in Current States then you are good to move on:
+    * Save Preferences and refresh the page.  If you see these values in Current States then you are good to move on:
         * **activity** : idle
 
 # Usage instructions (virtual device):
