@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+0.9.1 - tomw - Rename codes (supported in app).
 0.9.0 - tomw - Initial release.
 
 */
@@ -114,7 +115,7 @@ def pullCodesPage()
         section
         {
             input(name:	"syncInDevs", type: deviceFilterString, title: "Select Broadlink Remotes to save codes from", multiple: true, required: false, submitOnChange: true)
-            input(name: "keysToPull", type: "enum", title: "Select codes to save into this app", options: collectCodesFromDevs()?.keySet(), multiple: true, required: false, offerAll:true, submitOnChange: true, width: 8)
+            input(name: "keysToPull", type: "enum", title: "Select codes to save into this app", options: collectCodesFromDevs()?.keySet()?.sort(), multiple: true, required: false, offerAll:true, submitOnChange: true, width: 8)
             input(name: "actuallyPull", type: "bool", title: "Press to proceed!", defaultValue: false, submitOnChange: true, width: 4)
         }
         
@@ -186,6 +187,14 @@ def codeManagementPage()
             status = "Deleted selected codes."
         }
         
+        if(renameSelectedCode)
+        {
+            app.updateSetting("renameSelectedCode", false)
+            renameSavedCode(codeToRename, newCodeName)
+            
+            status ="Renamed code \"${codeToRename}\" to \"${newCodeName}\""
+        }
+        
         if(importEnteredCodes)
         {
             app.updateSetting("importEnteredCodes", false)
@@ -211,11 +220,18 @@ def codeManagementPage()
         
         displayStatus(status)
         
-        section("<b>Manage saved codes</b>")
+        section("<b>Delete saved codes</b>")
         {
             input(name: "codesToDelete", type: "enum", title: "Select saved codes to delete from app", options: allKnownCodesKeys(), multiple: true, required: false, offerAll:true)
             input(name: "deleteSelectedCodes", type: "bool", title: "Delete selected codes", defaultValue: false, submitOnChange: true, width: 3)
             input(name: "clearAllCodes", type: "bool", title: "Delete ALL codes from app", defaultValue: false, submitOnChange: true, width:3)
+        }
+        
+        section("<b>Rename saved codes</b>")
+        {
+            input(name: "codeToRename", type: "enum", title: "Select code to rename", options: allKnownCodesKeys(), multiple: false, required: false, width:4)
+            input(name: "newCodeName", type: "text", title: "Rename to:", required: false, width:2)
+            input(name: "renameSelectedCode", type: "bool", title: "Rename selected code", defaultValue: false, submitOnChange: true)          
         }
         
         section("<b>Import hex codes</b>")
