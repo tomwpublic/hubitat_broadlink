@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+0.9.1 - tomw - Rename codes (supported in app).
 0.9.0 - tomw - Initial release.
 
 */
@@ -51,11 +52,13 @@ def deleteSavedCode(name)
     
     if(res)
     {
-       log.info "removed code: ${name}"
+        log.info "removed code: ${name}"
+        return true        
     }
     else
     {
         log.info "code not found: ${name}"
+        return false
     }
 }
 
@@ -88,6 +91,19 @@ def getSavedCode(name)
     }
     
     return code
+}
+
+def renameSavedCode(oldName, newName)
+{
+    if([oldName, newName].contains(null)) { return }
+    
+    def code = getSavedCode(oldName)    
+    if(!code) { return }
+    
+    if(deleteSavedCode(oldName))
+    {
+        return addSavedCode(newName, code)
+    }
 }
 
 def clearSavedCodes()
