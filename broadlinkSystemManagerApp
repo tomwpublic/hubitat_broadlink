@@ -190,9 +190,14 @@ def codeManagementPage()
         if(renameSelectedCode)
         {
             app.updateSetting("renameSelectedCode", false)
-            renameSavedCode(codeToRename, newCodeName)
             
-            status ="Renamed code \"${codeToRename}\" to \"${newCodeName}\""
+            // default status, in case rename fails
+            status = "Rename failed!"
+            
+            if(renameSavedCode(codeToRename, newCodeName))
+            {
+                status ="Renamed code \"${codeToRename}\" to \"${newCodeName}\""
+            }
         }
         
         if(importEnteredCodes)
