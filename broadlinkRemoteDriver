@@ -26,7 +26,8 @@ Change history:
 
 metadata
 {
-    definition(name: "Broadlink Remote", namespace: "tomw", author: "tomw", importUrl: "")
+    definition(name: "Broadlink Remote", namespace: "tomw", author: "tomw", 
+               importUrl: "https://raw.githubusercontent.com/tomwpublic/hubitat_broadlink/main/broadlinkRemoteDriver")
     {
         capability "Actuator"
         capability "Initialize"
