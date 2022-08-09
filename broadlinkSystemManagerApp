@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+0.9.3 - tomw - Rework app UI to use buttons.
 0.9.2 - tomw - Rename codes (supported in app).
 0.9.0 - tomw - Initial release.
 
@@ -86,15 +87,32 @@ def displayStatus(status)
     }
 }
 
+def shortDelay()
+{
+    pauseExecution(100)    
+}
+
+def clearInputs()
+{
+    // clear out text inputs when we're done with them
+    app.updateSetting("newCodeName", "")
+    app.updateSetting("codesToImport", "")
+    app.updateSetting("prontoToImport", "")
+    app.updateSetting("prontoName", "")
+}
+
 def pullCodesPage()
 {
+    // make sure this page lags appButtonHandler when necessary
+    shortDelay()
+    
     dynamicPage(name: "pullCodesPage", title: "", install: true, uninstall: true)
     {
         def status = "Waiting for user input."
         
-        if(actuallyPull)
+        if(getVolatileState("actuallyPull"))
         {
-            app.updateSetting("actuallyPull", false)
+            setVolatileState("actuallyPull", false)
             
             def codesOptions = collectCodesFromDevs()
             def codesToPull = [:]
@@ -115,8 +133,11 @@ def pullCodesPage()
         section
         {
             input(name:	"syncInDevs", type: deviceFilterString, title: "Select Broadlink Remotes to save codes from", multiple: true, required: false, submitOnChange: true)
-            input(name: "keysToPull", type: "enum", title: "Select codes to save into this app", options: collectCodesFromDevs()?.keySet()?.sort(), multiple: true, required: false, offerAll:true, submitOnChange: true, width: 8)
-            input(name: "actuallyPull", type: "bool", title: "Press to proceed!", defaultValue: false, submitOnChange: true, width: 4)
+            input(name: "keysToPull", type: "enum", title: "Select codes to save into this app", options: collectCodesFromDevs()?.keySet()?.sort(), multiple: true, required: false, offerAll:true, submitOnChange: true)
+            if(null != keysToPull)
+            {
+                input(name: "actuallyPull", type: "button", title: "Press to proceed!")
+            }
         }
         
         cleanBreak(1)
@@ -127,13 +148,16 @@ def pullCodesPage()
 
 def pushCodesPage()
 {
+    // make sure this page lags appButtonHandler when necessary
+    shortDelay()
+    
     dynamicPage(name: "pushCodesPage", title: "", install: true, uninstall: true)
     {
         def status = "Waiting for user input."
         
-        if(actuallyPush)
+        if(getVolatileState("actuallyPush"))
         {
-            app.updateSetting("actuallyPush", false)
+            setVolatileState("actuallyPush", false)
             
             Map codes = [:]
             // meaningful status by default, in case nothing was selected
@@ -152,8 +176,11 @@ def pushCodesPage()
         section
         {
             input(name:	"syncOutDevs", type: deviceFilterString, title: "Select Broadlink Remotes to sync codes to from app", multiple: true, required: false, submitOnChange: true)
-            input(name: "codesToPush", type: "enum", title: "Select codes to sync to these devices", options: allKnownCodesKeys(), multiple: true, required: false, offerAll:true, submitOnChange: true, width: 8)
-            input(name: "actuallyPush", type: "bool", title: "Press to proceed!", defaultValue: false, submitOnChange: true, width: 4)
+            input(name: "codesToPush", type: "enum", title: "Select codes to sync to these devices", options: allKnownCodesKeys(), multiple: true, required: false, offerAll:true, submitOnChange: true)
+            if(null != codesToPush)
+            {
+                input(name: "actuallyPush", type: "button", title: "Press to proceed!")
+            }
         }
         
         cleanBreak(1)
@@ -164,21 +191,24 @@ def pushCodesPage()
 
 def codeManagementPage()
 {
+    // make sure this page lags appButtonHandler when necessary
+    shortDelay()
+    
     dynamicPage(name: "codeManagementPage", title: "", install: true, uninstall: true)
     {
         def status = "Waiting for user input."
         
-        if(clearAllCodes)
+        if(getVolatileState("clearAllCodes"))
         {
-            app.updateSetting("clearAllCodes", false)
+            setVolatileState("clearAllCodes", false)
             clearSavedCodes()
             
             status = "Cleared all codes."
         }
         
-        if(deleteSelectedCodes)
+        if(getVolatileState("deleteSelectedCodes"))
         {
-            app.updateSetting("deleteSelectedCodes", false)
+            setVolatileState("deleteSelectedCodes", false)
             codesToDelete.each
             {
                 deleteSavedCode(it)
@@ -187,9 +217,9 @@ def codeManagementPage()
             status = "Deleted selected codes."
         }
         
-        if(renameSelectedCode)
+        if(getVolatileState("renameSelectedCode"))
         {
-            app.updateSetting("renameSelectedCode", false)
+            setVolatileState("renameSelectedCode", false)
             
             // default status, in case rename fails
             status = "Rename failed!"
@@ -200,17 +230,17 @@ def codeManagementPage()
             }
         }
         
-        if(importEnteredCodes)
+        if(getVolatileState("importEnteredCodes"))
         {
-            app.updateSetting("importEnteredCodes", false)
+            setVolatileState("importEnteredCodes", false)
             importCodes(codesToImport)
             
             status = "Imported codes."
         }
         
-        if(importProntoCodes)
+        if(getVolatileState("importProntoCodes"))
         {
-            app.updateSetting("importProntoCodes", false)
+            setVolatileState("importProntoCodes", false)
             
             // default status, in case conversion fails
             status = "Pronto import failed!"
@@ -227,29 +257,35 @@ def codeManagementPage()
         
         section("<b>Delete saved codes</b>")
         {
-            input(name: "codesToDelete", type: "enum", title: "Select saved codes to delete from app", options: allKnownCodesKeys(), multiple: true, required: false, offerAll:true)
-            input(name: "deleteSelectedCodes", type: "bool", title: "Delete selected codes", defaultValue: false, submitOnChange: true, width: 3)
-            input(name: "clearAllCodes", type: "bool", title: "Delete ALL codes from app", defaultValue: false, submitOnChange: true, width:3)
+            input(name: "codesToDelete", type: "enum", title: "Select saved codes to delete from app", options: allKnownCodesKeys(), multiple: true, required: false, submitOnChange: true, offerAll:true)
+            if(null != codesToDelete)
+            {
+                input(name: "deleteSelectedCodes", type: "button", title: "Delete selected codes", width: 3)
+            }
+            input(name: "clearAllCodes", type: "button", title: "Delete ALL codes from app", width:3)
         }
         
         section("<b>Rename saved codes</b>")
         {
-            input(name: "codeToRename", type: "enum", title: "Select code to rename", options: allKnownCodesKeys(), multiple: false, required: false, width:4)
-            input(name: "newCodeName", type: "text", title: "Rename to:", required: false, width:2)
-            input(name: "renameSelectedCode", type: "bool", title: "Rename selected code", defaultValue: false, submitOnChange: true)          
+            input(name: "codeToRename", type: "enum", title: "Select code to rename", options: allKnownCodesKeys(), multiple: false, required: false, submitOnChange: true, width:4)
+            input(name: "newCodeName", type: "text", title: "Rename to:", required: false, submitOnChange: true, width:2)
+            if(![codeToRename, newCodeName].contains(null))
+            {
+                input(name: "renameSelectedCode", type: "button", title: "Rename selected code")
+            }
         }
         
         section("<b>Import hex codes</b>")
         {
             input(name: "codesToImport", type: "text", title: "Codes to import (in form of {name=2600...,name2=B200...})", required: false)
-            input(name: "importEnteredCodes", type: "bool", title: "Press to import entered codes", defaultValue: false, submitOnChange: true)
+            input(name: "importEnteredCodes", type: "button", title: "Press to import entered codes")
         }
         
         section("<b>Import pronto codes</b>")
         {
             input(name: "prontoToImport", type: "text", title: "Pronto code to import (in form of \"0000 12AB\")", required: false, width: 8)
             input(name: "prontoName", type: "text", title: "Save as:", required: false, width: 4)
-            input(name: "importProntoCodes", type: "bool", title: "Press to import entered codes", defaultValue: false, submitOnChange: true)
+            input(name: "importProntoCodes", type: "button", title: "Press to import entered codes")
         }
         
         cleanBreak(1)
@@ -266,6 +302,13 @@ def updated()
 def installed()
 {
     unsubscribe()
+    clearInputs()
+}
+
+void appButtonHandler(btn)
+{
+    // flag button pushed and let pages sort it out
+    setVolatileState(btn, true)
 }
 
 #include tomw.broadlinkHelpers
