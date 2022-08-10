@@ -30,7 +30,8 @@ library (
     description: "Broadlink helpers",
     name: "broadlinkHelpers",
     namespace: "tomw",
-    documentationLink: ""
+    documentationLink: "",
+    importUrl: "https://raw.githubusercontent.com/tomwpublic/hubitat_broadlink/main/libraries/broadlinkHelpers"
 )
 
 import groovy.transform.Field
