@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+0.9.3 - tomw - Rework app UI to use buttons.
 0.9.1 - tomw - Added push command, which uses the button name as a saved code to send
 0.9.0 - tomw - Initial release.
 
@@ -25,7 +26,8 @@ Change history:
 
 metadata
 {
-    definition(name: "Broadlink Remote", namespace: "tomw", author: "tomw", importUrl: "")
+    definition(name: "Broadlink Remote", namespace: "tomw", author: "tomw", 
+               importUrl: "https://raw.githubusercontent.com/tomwpublic/hubitat_broadlink/main/broadlinkRemoteDriver")
     {
         capability "Actuator"
         capability "Initialize"
@@ -1065,25 +1067,4 @@ def i8Tou8(input)
 def i16Tou16(input)
 {
     return input & 0xFFFF
-}
-
-//////////////////////////////////////
-// volatile state
-//////////////////////////////////////
-
-@Field static volatileState = [:].asSynchronized()
-
-def setVolatileState(name, value)
-{
-    def tempState = volatileState[device.getDeviceNetworkId()] ?: [:]
-    tempState.putAt(name, value)
-    
-    volatileState.putAt(device.getDeviceNetworkId(), tempState)
-    
-    return volatileState
-}
-
-def getVolatileState(name)
-{
-    return volatileState.getAt(device.getDeviceNetworkId())?.getAt(name)
 }
