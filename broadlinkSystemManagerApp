@@ -32,7 +32,8 @@ definition(
     category: "Convenience",
     iconUrl: "",
     iconX2Url: "",
-    iconX3Url: "")
+    iconX3Url: "",
+    importUrl: "https://raw.githubusercontent.com/tomwpublic/hubitat_broadlink/main/broadlinkSystemManagerApp")
 
 preferences
 {
