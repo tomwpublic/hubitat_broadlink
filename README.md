@@ -10,7 +10,7 @@ Thanks to arnb and Sebastien from the Hubitat forums for all of their testing, f
 
 # Manual Installation instructions:
 
-Installing with Hubitat Package Manager (HPM) is recommended.
+Installing with Hubitat Package Manager (HPM) is recommended.  You must use HPM version 1.8.5 or later.
 
 If you must install manually, follow these steps:
 
