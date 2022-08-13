@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+0.9.4 - tomw - Added 'sequence' scripting feature.
 0.9.3 - tomw - Rework app UI to use buttons.
 0.9.1 - tomw - Added push command, which uses the button name as a saved code to send
 0.9.0 - tomw - Initial release.
@@ -88,7 +89,9 @@ import groovy.transform.Field
 @Field cmdControl = 0x6A
 
 // common payloads that don't change
-@Field byte[] getFwVers   = [0x68]
+@Field byte[] getFwVers       = [0x68]
+@Field byte[] checkSensors    = [0x01]
+@Field byte[] checkSensors4   = [0x24]
 
 import hubitat.device.HubAction
 import hubitat.device.Protocol
@@ -181,6 +184,24 @@ def checkReady()
     }
     
     return rfA
+}
+
+def updateSeqStatus(inSeq = false)
+{
+    logDebug("updateSeqStatus = ${inSeq}")
+    setVolatileState("seqExecuting", inSeq)
+}
+
+def checkSeqStatus()
+{
+    def sS = getVolatileState("seqExecuting")
+    if(null == sS)
+    {
+        // not initialized, so assume "ready"
+        return false
+    }
+    
+    return sS
 }
 
 def auth()
@@ -551,6 +572,7 @@ def sendCodeData(code, reps = 1)
     {
         // FOR IR ONLY (0x26 first byte of command),
         //   code will be sent (n+1) times this value
+        reps = reps.toInteger()
         reps--
         sendPacket[5] = (reps < 0) ? 0 : reps
     }
@@ -622,35 +644,69 @@ def executeSequence(sequence)
 {
     if(!sequence) { return }
     
-    sequence = sequence?.split("sequence:")?.getAt(1)
-    sequence = sequence.tokenize(";")
-    
-    logDebug("sending sequence: ${sequence}")
-    
-    sequence.each
+    if(checkSeqStatus())
     {
-        it = it.trim()
-        switch(it)
+        logDebug("sequence already executing; try again later")
+        return
+    }
+    
+    try
+    {
+        updateSeqStatus(true)
+        
+        sequence = sequence?.split("sequence:")?.getAt(1)
+        sequence = sequence.tokenize(";")
+        
+        logDebug("sending sequence: ${sequence}")
+        
+        sequence.each
         {
-            case ~/.*delay.*/:
-                def delay = it.split("delay=")?.getAt(1)?.trim()?.toInteger() ?: 0
-            
-                // limit to 5s delay
-                delay = (delay > 5000) ? 5000 : delay                
-                logDebug("seq delay: ${delay} ms")
-                pauseExecution(delay ?: 0)
-                break
-            
-            case ~/.*code.*/:
-                def codeName = it.split("code=")?.getAt(1)?.trim()
-            
-                logDebug("seq code: ${codeName}")
-                sendSavedCode(codeName)
-                break
-            
-            default:
-                logDebug("macro bad entry: ${it}")
+            it = it.trim()
+            switch(it)
+            {
+                case ~/.*delay.*/:
+                    def delay = it.split("=")?.getAt(1)?.trim()?.toInteger() ?: 0
+                
+                    // limit to 5s delay
+                    delay = (delay > 5000) ? 5000 : delay
+                    logDebug("seq delay: ${delay} ms")
+                    pauseExecution(delay ?: 0)
+                    break
+                
+                case ~/.*code.*/:
+                    def codeName = it.split("=")?.getAt(1)?.trim()
+                
+                    logDebug("seq code: ${codeName}")
+                    sendSavedCode(codeName)
+                    // throttle before next code
+                    pauseExecution(100)
+                
+                    break
+                
+                case ~/.*repeat.*/:
+                    def codeName = it.split("repeat")?.getAt(1)?.trim()
+                    def params = codeName?.tokenize("=")
+                    if(2 == params.size())
+                    {
+                        logDebug("seq code: ${params[1]?.trim()} reps: ${params[0]?.trim()?.toString()}")
+                        sendSavedCode(params[1]?.trim(), params[0]?.trim()?.toInteger())
+                        // throttle before next code
+                        pauseExecution(100)
+                    }
+                    break
+                
+                default:
+                    logDebug("sequence bad entry: ${it}")
+            }
         }
+    }    
+    catch(Exception e)
+    {
+        logDebug("executeSequence: ${e.message}")
+    }
+    finally
+    {
+        updateSeqStatus(false)
     }
 }
 
