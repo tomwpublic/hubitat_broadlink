@@ -1,7 +1,7 @@
 {
   "packageName": "hubitat_broadlink",
   "author": "tomw",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2022-08-04",
   "bundles": [
