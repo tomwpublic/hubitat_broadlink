@@ -18,9 +18,10 @@ limitations under the License.
 
 Change history:
 
+0.9.5 - tomw - Added ping for RM3 devices as keep-alive.
 0.9.4 - tomw - Added 'sequence' scripting feature.
 0.9.3 - tomw - Rework app UI to use buttons.
-0.9.1 - tomw - Added push command, which uses the button name as a saved code to send
+0.9.1 - tomw - Added push command, which uses the button name as a saved code to send.
 0.9.0 - tomw - Initial release.
 
 */
@@ -107,6 +108,7 @@ def logDebug(msg)
 
 def initialize()
 {
+    unschedule()
     scan()
 }
 
@@ -237,6 +239,9 @@ def authResponse(message)
     getDevDetails() << [id: id, authKey: authKey]
     
     updateDevStatus("idle")
+    
+    // kick off ping() loop as keep-alive
+    runIn(60, ping)
 
     // try to check basic info
     interrogateDevice()
@@ -324,6 +329,20 @@ def interrogateResp(message)
     
     // try to determine which API version the device speaks
     senseAPI()
+}
+
+def ping()
+{
+    // send heartbeat ping that would normally come from cloud
+    //  so that offline devices don't periodically reboot
+    
+    byte[] packet = [0] * 0x30
+    packet[0x26] = 1
+
+    def params = [type: HubAction.Type.LAN_TYPE_UDPCLIENT, destinationAddress: ipAddress, encoding: HubAction.Encoding.HEX_STRING]
+    sendHubCommand(new HubAction(HexUtils.byteArrayToHexString(packet), Protocol.LAN, params))
+    
+    runIn(60, ping)
 }
 
 def learnIR()
