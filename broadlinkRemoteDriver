@@ -241,7 +241,7 @@ def authResponse(message)
     updateDevStatus("idle")
     
     // kick off ping() loop as keep-alive
-    ping()
+    runIn(60, ping)
 
     // try to check basic info
     interrogateDevice()
