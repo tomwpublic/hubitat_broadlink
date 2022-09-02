@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+0.9.6 - tomw - Bugfixes and improved error reporting.
 0.9.5 - tomw - Added ping for RM3 devices as keep-alive.
 0.9.4 - tomw - Added 'sequence' scripting feature.
 0.9.3 - tomw - Rework app UI to use buttons.
@@ -109,6 +110,11 @@ def logDebug(msg)
 def initialize()
 {
     unschedule()
+    
+    // clear these code values, in case the long strings cause browser problems
+    device.deleteCurrentState("learnedCode")
+    device.deleteCurrentState("savedCode")
+    
     scan()
 }
 
@@ -128,8 +134,7 @@ def scan()
     cancelAll()    
     updateDevStatus("initializing")
     
-    // https://github.com/mjg59/python-broadlink/blob/master/protocol.md#network-discovery
-    
+    // https://github.com/mjg59/python-broadlink/blob/master/protocol.md#network-discovery    
     byte[] packet = [0] * 48
     packet[0x26] = 6
     
@@ -158,6 +163,12 @@ def scanResponse(message)
     
     def devDetails = [devType: devType, mac: mac, name: name, isLocked: isLocked, id: 0, authKey: INIT_KEY]
     setDevDetails(devDetails)
+    
+    if(isLocked)
+    {
+        updateDevStatus("device is locked in Broadlink app")
+        return        
+    }
     
     pauseExecution(500)
     
@@ -226,10 +237,7 @@ def authResponse(message)
 {
     def resp = prepResponse(message, false, true)
     
-    if(null == resp)
-    {
-        return
-    }
+    if(null == resp) { return }
     
     logDebug("authResp = ${HexUtils.byteArrayToHexString(resp)}")
     
@@ -349,8 +357,7 @@ def learnIR()
 {
     if(!checkReady()) { return }
     
-    // https://github.com/mjg59/python-broadlink/blob/master/protocol.md#entering-learning-mode
-    
+    // https://github.com/mjg59/python-broadlink/blob/master/protocol.md#entering-learning-mode    
     updateDevStatus("learning IR", false)
 
     send_packet(getDevDetails() << [callback: "learnResponse"], cmdControl, [0x03] as byte[])
@@ -370,8 +377,7 @@ def learnResponse(message)
 
 def readback()
 {
-    // https://github.com/mjg59/python-broadlink/blob/master/protocol.md#entering-learning-mode
-    
+    // https://github.com/mjg59/python-broadlink/blob/master/protocol.md#entering-learning-mode    
     send_packet(getDevDetails() << [callback: "readbackResponse"], cmdControl, [0x04] as byte[])
 }
 
@@ -566,7 +572,7 @@ def waitForResponse(message, retryHandler, successHandler, timeout = 10, addlChe
     {
         //logDebug e.message
         
-        // try again in a second
+        // try again in 1/2 second
         setVolatileState("iter", iter + 1)
         pauseExecution(500)
         "$retryHandler"()
@@ -632,8 +638,8 @@ def generateIR(offBurst, onBurst, leadIn, bitmap, leadOut)
     // code sequence complete
     
     // apply length and build the actual packet    
-    def len = hubitat.helper.HexUtils.hexStringToByteArray(code).size()
-    len = hubitat.helper.HexUtils.byteArrayToHexString([0xFF & len, 0xFF & (len >> 8)] as byte[])    
+    def len = HexUtils.hexStringToByteArray(code).size()
+    len = HexUtils.byteArrayToHexString([0xFF & len, 0xFF & (len >> 8)] as byte[])    
     code = "2600" + len + code + "0D05"
     
     logDebug("generateIR: offBurst=${offBurst}, onBurst=${onBurst}, leadIn=${leadIn}, bitmap=${bitmap}, leadOut=${leadOut}")
