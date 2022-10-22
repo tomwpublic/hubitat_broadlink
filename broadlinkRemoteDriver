@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+0.9.7 - tomw - Support for sensors (temperature and humidity).
 0.9.6 - tomw - Bugfixes and improved error reporting.
 0.9.5 - tomw - Added ping for RM3 devices as keep-alive.
 0.9.4 - tomw - Added 'sequence' scripting feature.
@@ -34,6 +35,9 @@ metadata
     {
         capability "Actuator"
         capability "Initialize"
+        capability "RelativeHumidityMeasurement"
+        capability "Refresh"
+        capability "TemperatureMeasurement"
         
         command "learnIR"
         
@@ -306,16 +310,36 @@ def interrogateDevice()
     
     // get_fwversion
     send_packet(getDevDetails() << [callback: "interrogateResp"], cmdControl, getFwVers)
+}
+
+def refresh()
+{
+    if(!checkReady()) { return }
     
-    /*   
-    packet = [0] * 4
-    // set name
-    packet = appendByteArr(packet, nameToSet.getBytes())
-    packet = appendByteArr(packet, [0] * (0x50 - packet.size()))
-    // set lock status
-    packet[0x43] = 0
-    //send_packet(getDevDetails() << [callback: "interrogateResp"], cmdControl, packet)
-    */
+    // checkSensors
+    send_packet(getDevDetails() << [callback: "sensorResponse"], cmdControl, isNewApi() ? checkSensors4 : checkSensors)
+}
+
+def sensorResponse(message)
+{
+    def resp = prepResponse(message)
+    
+    if(resp.size() == 0) { return }
+    
+    logDebug("sensorResp = ${HexUtils.byteArrayToHexString(resp)}")
+    
+    def temperature = resp[0] + (resp[1] / 100)
+    if(temperature)
+    {
+        temperature = convertTemperatureIfNeeded(temperature, "C", 2)
+        sendEvent(name: "temperature", value: temperature)
+    }
+    
+    def humidity = resp[2] + (resp[3] / 100)
+    if(humidity)
+    {
+        sendEvent(name: "humidity", value: humidity)
+    }
 }
 
 def interrogateResp(message)
@@ -441,6 +465,20 @@ def sweepRF()
     if(!hasRF()) { return }
     
     start_sweep()
+}
+
+def setTargetRF(freq)
+{
+    if(!hasRF()) { return }
+    
+    freq = freq?.toFloat()    
+    if(!freq) { return }
+    
+    if(freq < 300 || freq > 450) { return }
+    
+    // frequency is specified in kHz
+    freq = (freq * 1000)?.toInteger()    
+    if(freq) { getDevDetails() << [sweepFreq: freq] }
 }
 
 def start_sweep()
