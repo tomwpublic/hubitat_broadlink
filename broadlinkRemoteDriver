@@ -476,7 +476,8 @@ def setTargetRF(freq)
     
     if(freq < 300 || freq > 450) { return }
     
-    // frequency is specified in kHz
+    // user input expected in terms of MHz
+    //   but stored in sweepFreq in terms of kHz
     freq = (freq * 1000)?.toInteger()    
     if(freq) { getDevDetails() << [sweepFreq: freq] }
 }
