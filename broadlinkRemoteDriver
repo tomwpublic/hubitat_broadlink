@@ -240,8 +240,7 @@ def auth()
 
 def authResponse(message)
 {
-    def resp = prepResponse(message, false, true)
-    
+    def resp = prepResponse(message, false, true)    
     if(null == resp) { return }
     
     logDebug("authResp = ${HexUtils.byteArrayToHexString(resp)}")
@@ -323,9 +322,8 @@ def refresh()
 
 def sensorResponse(message)
 {
-    def resp = prepResponse(message)
-    
-    if(resp.size() == 0) { return }
+    def resp = prepResponse(message)    
+    if(resp?.size() == 0) { return }
     
     logDebug("sensorResp = ${HexUtils.byteArrayToHexString(resp)}")
     
@@ -345,9 +343,8 @@ def sensorResponse(message)
 
 def interrogateResp(message)
 {
-    def resp = prepResponse(message, false, true)
-    
-    if(resp.size() == 0) { return }
+    def resp = prepResponse(message, false, true)    
+    if(resp?.size() == 0) { return }
     
     //logDebug("interrogateResp = ${HexUtils.byteArrayToHexString(resp)}")
     
@@ -526,7 +523,9 @@ def rf_learn(resp = null)
 def parseRF(message)
 {
     def resp = prepResponse(message, false)
-    logDebug("parseRF resp = ${HexUtils.byteArrayToHexString(resp)}")
+    if(null == resp) { return }
+    
+    logDebug("parseRF resp = ${HexUtils.byteArrayToHexString(resp)}")    
     
     switch(resp[0])
     {
@@ -900,7 +899,8 @@ def prepResponse(message, trim = true, useRaw = false)
         def padding = 16 - (plb.size() % 16)
         plb = appendByteArr(plb, [0] * padding)
         
-        resp = aes_cbc(plb, "dec", getDevDetails().authKey, INIT_VECT)
+        resp = aes_cbc(plb, "dec", getDevDetails().authKey, INIT_VECT)        
+        if(!resp) { return }
         
         if(isNewApi() && !useRaw)
         {
@@ -1014,6 +1014,8 @@ def parse(message)
     logDebug("parse: ${lanMsg}")
     
     def resp = prepResponse(lanMsg.payload, false)
+    if(null == resp) { return }
+    
     logDebug("parseResp = ${HexUtils.byteArrayToHexString(resp)}")
 }
 
