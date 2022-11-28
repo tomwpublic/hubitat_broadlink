@@ -18,6 +18,7 @@ limitations under the License.
 
 Change history:
 
+0.9.8 - tomw - Fix for IllegalBlockSizeException
 0.9.7 - tomw - Support for sensors (temperature and humidity).
 0.9.6 - tomw - Bugfixes and improved error reporting.
 0.9.5 - tomw - Added ping for RM3 devices as keep-alive.
@@ -414,8 +415,7 @@ def processCodeResp(resp)
 {
     def code = HexUtils.byteArrayToHexString(resp)
     //logDebug ("raw code = ${code}")
-    
-    code = HexUtils.byteArrayToHexString(resp)
+
     sendEvent(name: "learnedCode", value: code)
     updateDevStatus("code captured")
 }
@@ -895,6 +895,11 @@ def prepResponse(message, trim = true, useRaw = false)
     {
         // decode payload, starts at 0x38
         plb = subBytes(plb, 0x38, plb.size() - 0x38)
+        
+        // pad for size, if necessary
+        def padding = 16 - (plb.size() % 16)
+        plb = appendByteArr(plb, [0] * padding)
+        
         resp = aes_cbc(plb, "dec", getDevDetails().authKey, INIT_VECT)
         
         if(isNewApi() && !useRaw)
@@ -1019,18 +1024,26 @@ import javax.crypto.Cipher
 def aes_cbc(data, op, key, iv)
 {
     // thanks: https://community.hubitat.com/t/groovy-aes-encryption-driver/31556
+    try
+    {
+        def cipher = Cipher.getInstance("AES/CBC/NoPadding", "SunJCE")
+        
+        byte[] keyBytes = HexUtils.hexStringToByteArray(key)
+        SecretKeySpec aKey = new SecretKeySpec(keyBytes, "AES")
+        
+        byte[] ivBytes = HexUtils.hexStringToByteArray(iv)
+        IvParameterSpec aIv = new IvParameterSpec(ivBytes)
+        
+        cipher.init(op == "enc" ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, aKey, aIv)
+        
+        return cipher.doFinal(data) as byte[]
+    }
+    catch (Exception e)
+    {
+        log.debug("aes_cbc() exception: ${e}")
+    }
     
-    def cipher = Cipher.getInstance("AES/CBC/NoPadding", "SunJCE")
-  
-    byte[] keyBytes = HexUtils.hexStringToByteArray(key)
-    SecretKeySpec aKey = new SecretKeySpec(keyBytes, "AES")
-    
-    byte[] ivBytes = HexUtils.hexStringToByteArray(iv)
-    IvParameterSpec aIv = new IvParameterSpec(ivBytes)
-    
-    cipher.init(op == "enc" ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, aKey, aIv)
-    
-    return cipher.doFinal(data)
+    return null
 }
 
 def appendByteArr(a, b)
