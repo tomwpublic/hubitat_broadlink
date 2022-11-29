@@ -20,7 +20,7 @@ If you must install manually, follow these steps:
 
 # Virtual Device configuration instructions:
 
-* In the *Devices* section of Hubitat, add a *New Virtual Device* of type Broadlink Remote.  See below for configuration instructions.
+* In the *Devices* section of Hubitat, add a *New Virtual Device* of type Broadlink Remote.
 * On the Broadlink Remote device page, set the preferences:
     * Enter the IP address of your broadlink RM device and click Save Preferences.
     * If your remote has RF functionality (typically named some variation of RM Pro), enabled the "Does your device support RF?" option.
