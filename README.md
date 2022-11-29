@@ -15,14 +15,12 @@ Installing with Hubitat Package Manager (HPM) is recommended.  You must use HPM 
 If you must install manually, follow these steps:
 
 * In the *Bundles* section of hubitat, import the hubitat_broadlink.zip bundle.
-* In the *Drivers Code* section of Hubitat, install the broadlinkRemoteDriver.
-    * In the *Devices* section of Hubitat, add a *New Virtual Device* of type Broadlink Remote.  See below for configuration instructions.
-* If you plan to use multiple Broadlink remotes, install the broadlinkSystemManagerApp in the *Apps Code* section of Hubitat.
-    * In the *Apps* section of Hubitat, click *Add User App* to actually install the Broadlink System Manager app.
-    * Wait to fully configure the app until you have installed and configured your virtual devices.
+* In the *Drivers Code* section of Hubitat, install the broadlinkRemoteDriver.    
+* If you plan to use multiple Broadlink remotes, install the broadlinkSystemManagerApp in the *Apps Code* section of Hubitat.    
 
 # Virtual Device configuration instructions:
 
+* In the *Devices* section of Hubitat, add a *New Virtual Device* of type Broadlink Remote.  See below for configuration instructions.
 * On the Broadlink Remote device page, set the preferences:
     * Enter the IP address of your broadlink RM device and click Save Preferences.
     * If your remote has RF functionality (typically named some variation of RM Pro), enabled the "Does your device support RF?" option.
@@ -68,6 +66,10 @@ Learning RF codes takes place in **two steps:** first, the range is swept to fin
 * `SendStoredCode`, `SendCode`, and `generateIR` are provided only for compatibility with existing apps.  They are **not** recommended for new applications.
 
 # Usage instructions (system manager app):
+
+**Install the app**
+* In the *Apps* section of Hubitat, click *Add User App* to actually install the Broadlink System Manager app.
+    * Wait to fully configure the app until you have installed and configured your virtual devices.
 
 **Save codes from virtual devices into this app**
 
