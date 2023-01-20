@@ -85,7 +85,7 @@ def getSavedCode(name)
     
     // try to get at user-specific name first,
     //   then check against modified naming style used by old integration as a last resort
-    code = codes?.get(name) ?: codes.get(name?.tokenize(" ,!@#\$%^&()")?.join("_"))
+    code = codes?.get(name) ?: codes?.get(name?.tokenize(" ,!@#\$%^&()")?.join("_"))
     
     if(null == code)
     {
