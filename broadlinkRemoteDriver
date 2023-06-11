@@ -18,7 +18,8 @@ limitations under the License.
 
 Change history:
 
-0.9.8 - tomw - Fix for IllegalBlockSizeException
+0.9.9 - tomw - Make device keep-alive ping a configurable option, and disable by default for RM4 devices.
+0.9.8 - tomw - Fix for IllegalBlockSizeException.
 0.9.7 - tomw - Support for sensors (temperature and humidity).
 0.9.6 - tomw - Bugfixes and improved error reporting.
 0.9.5 - tomw - Added ping for RM3 devices as keep-alive.
@@ -80,6 +81,7 @@ preferences
     {
         input name: "ipAddress", type: "text", title: "IP address", required: true
         input name: "deviceHasRF", type: "bool", title: "Does your device support RF?", defaultValue: false
+        input name: "doDevicePing", type: "bool", title: "Send keep-alive ping to RM3 and RM Pro devices?", defaultValue: true
     }
     section
     {
@@ -253,7 +255,17 @@ def authResponse(message)
     updateDevStatus("idle")
     
     // kick off ping() loop as keep-alive
-    runIn(60, ping)
+    if(doDevicePing || (null == doDevicePing))
+    {
+        if(null == doDevicePing)
+        {
+            // no setting was specified, so this must be someone who upgraded source code
+            //  so, make sure the default value is used at least once
+            device.updateSetting("doDevicePing", true)
+        }
+        
+        runIn(60, ping)
+    }
 
     // try to check basic info
     interrogateDevice()
@@ -295,6 +307,10 @@ def senseResponse(message)
         
         return
     }
+    
+    // if we got this far, new API is confirmed
+    //  so, disable ping()
+    device.updateSetting("doDevicePing", false)
     
     // second way of getting device name
     //logDebug(new String(subBytes(resp, 0x48, resp.size() - 0x48)))
@@ -372,7 +388,7 @@ def ping()
     def params = [type: HubAction.Type.LAN_TYPE_UDPCLIENT, destinationAddress: ipAddress, encoding: HubAction.Encoding.HEX_STRING]
     sendHubCommand(new HubAction(HexUtils.byteArrayToHexString(packet), Protocol.LAN, params))
     
-    runIn(60, ping)
+    if(doDevicePing) { runIn(60, ping) }
 }
 
 def learnIR()
