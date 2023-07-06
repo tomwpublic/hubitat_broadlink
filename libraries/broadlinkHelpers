@@ -334,10 +334,9 @@ def buildBroadlinkFromLircCode(Map lircSpec)
     if(lircSpec.ptrail)
     {
         // any ptrail, if present
-        strCode += encodeValToCode(lircSpec.ptrail.high, mult)
-        
-        // low value for ptrail is likely not present, so just use the low value for a one if not
-        strCode += encodeValToCode((lircSpec.ptrail.low != null) ? lircSpec.ptrail.low : lircSpec.one.low, mult)
+        strCode += encodeValToCode(lircSpec.ptrail, mult)        
+        // low value for ptrail is never(?) present, so just use the low value for a one
+        strCode += encodeValToCode(lircSpec.one.low, mult)
     }
     
     logDebug("raw lirc conversion: ${strCode}")
@@ -384,6 +383,7 @@ def lircParseFile(input)
     
     def lircSpec =
         [
+            bits: _lircGetIntValsByName(input, "bits", 1)?.get(0),
             header: [high: header[0], low: header[1]],
             one: [high: one[0], low: one[1]],
             zero: [high: zero[0], low: zero[1]],
