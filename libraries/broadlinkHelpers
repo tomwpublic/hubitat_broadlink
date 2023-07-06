@@ -345,6 +345,80 @@ def buildBroadlinkFromLircCode(Map lircSpec)
     return prepCodeStr(strCode)
 }
 
+private _lircGetIntValsByName(input, name, countOfVals)
+{
+    def splitInput = input?.split()    
+    def idxName = splitInput.findIndexOf { it.toLowerCase() == name }
+    
+    if(-1 == idxName) { return }
+    
+    List retList = []    
+    for(int i = idxName + 1; i <= (idxName + countOfVals); i++)
+    {
+        retList += splitInput[i]?.toInteger()
+    }
+    
+    return retList    
+}
+
+def lircParseFile(input)
+{
+    // remove comment lines and empty lines (into cleanedInput)
+    def cleanedInput = ""
+    input?.eachLine
+    { line ->
+        if(line && !line?.stripMargin()?.startsWith("#")) { cleanedInput += (line + "\n") }
+    }
+    
+    logDebug("cleanedInput file follows:")
+    logDebug(cleanedInput)
+    
+    input = cleanedInput
+
+    
+    // first, extract the basic lirc details...
+    
+    def one = _lircGetIntValsByName(input, "one", 2)
+    def zero = _lircGetIntValsByName(input, "zero", 2)
+    def header = _lircGetIntValsByName(input, "header", 2) 
+    
+    def lircSpec =
+        [
+            header: [high: header[0], low: header[1]],
+            one: [high: one[0], low: one[1]],
+            zero: [high: zero[0], low: zero[1]],
+            pre_data: _lircGetIntValsByName(input, "pre_data", 1),
+            pre_data_bits: _lircGetIntValsByName(input, "pre_data_bits", 1)?.get(0),
+            post_data: _lircGetIntValsByName(input, "post_data", 1)?.get(0),
+            post_data_bits: _lircGetIntValsByName(input, "post_data_bits", 1)?.get(0),
+            ptrail: _lircGetIntValsByName(input, "ptrail", 1)?.get(0)
+        ]    
+    
+    // Get the text between 'begin codes' and 'end codes'
+    // Note: this will break if there is more than one such section in a lirc file
+    def codesInput = input.split('begin codes')?.getAt(1)?.split('end codes')
+    
+    logDebug("codesInput section follows:")
+    logDebug(codesInput)    
+    
+    // ...then, extract each code for processing    
+    def codeSpecs = []
+    codesInput?.getAt(0)?.eachLine
+    { line ->
+        line = line.split()
+        if(line.size() >= 2)
+        {
+            codeSpecs += [name: line[0], code: line[1]]
+        }
+    }
+    
+    def finalSpec = [lircSpec: lircSpec, codeSpecs: codeSpecs]
+    logDebug("finalSpec follows:")
+    logDebug(finalSpec)
+    
+    return finalSpec
+}
+
 //////////////////////////////////////
 // volatile state
 //////////////////////////////////////
