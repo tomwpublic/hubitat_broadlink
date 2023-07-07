@@ -362,6 +362,16 @@ private _lircGetIntValsByName(input, name, countOfVals)
     return retList    
 }
 
+private _lircGetStringValByName(input, name)
+{
+    def splitInput = input?.split()    
+    def idxName = splitInput.findIndexOf { it.toLowerCase() == name }
+    
+    if(-1 == idxName) { return }
+    
+    return splitInput[idxName + 1]
+}
+
 def _turn0xStringIntoInt(hexString)
 {
     if(!hexString) { return }
@@ -396,6 +406,7 @@ def lircParseFile(input)
     
     def lircSpec =
         [
+            name: _lircGetStringValByName(input, "name"),
             bits: _lircGetIntValsByName(input, "bits", 1)?.get(0),
             header: header,
             one: [high: one[0], low: one[1]],
@@ -422,7 +433,8 @@ def lircParseFile(input)
         line = line.split()
         if(line.size() >= 2)
         {
-            codeSpecs += [name: line[0], code: _turn0xStringIntoInt(line[1])]
+            // prepend remote name to code name, if present
+            codeSpecs += [name: (lircSpec.name ? "${lircSpec.name}_" : "") + line[0], code: _turn0xStringIntoInt(line[1])]
         }
     }
     
