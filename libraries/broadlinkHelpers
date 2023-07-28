@@ -18,9 +18,10 @@ limitations under the License.
 
 Change history:
 
-0.9.3 - tomw - Rework app UI to use buttons.
-0.9.2 - tomw - Rename codes (supported in app).
-0.9.0 - tomw - Initial release.
+0.9.10 - tomw - Added lirc code import helpers.
+0.9.3  - tomw - Rework app UI to use buttons.
+0.9.2  - tomw - Rename codes (supported in app).
+0.9.0  - tomw - Initial release.
 
 */
 
@@ -145,8 +146,45 @@ def allKnownCodesKeys()
 }
 
 ////////////////////////////
-// pronto codes operations
+// import codes operations (pronto, lirc)
 ////////////////////////////
+
+String prepCodeStr(rawCode)
+{
+    // build the full Broadlink code string from the raw IR sequence
+    
+    def strCode
+    
+    // length of raw conversion (no header, no leadout)
+    def len = HexUtils.hexStringToByteArray(rawCode).size()
+    len = HexUtils.byteArrayToHexString([0xFF & len, 0xFF & (len >> 8)] as byte[])
+    
+    strCode = "2600" + len + rawCode
+    
+    // IR leadout (standard)
+    strCode += HexUtils.byteArrayToHexString([0x0d, 0x05] as byte[])
+    
+    return strCode
+}
+
+String encodeValToCode(code, mult)
+{
+    // encode each code byte into the Broadlink scheme based on its value
+    code = (code * mult).toInteger()
+    
+    byte[] tmpCode
+    if(code <= 0xFF)
+    {
+        tmpCode = [code] 
+    }
+    else
+    {
+        // leading zero, then big-endian if larger than one byte
+        tmpCode = [0, 0xFF & (code >> 8), 0xFF & code]
+    }
+    
+    return HexUtils.byteArrayToHexString(tmpCode)    
+}
 
 def convertProntoToBroadlink(pronto)
 {
@@ -172,6 +210,7 @@ def buildBroadlinkFromProntoCodes(codes)
     def freq = 1 / (codes[1] * 0.241246)
     logDebug("freq = ${freq}")
     
+    // here we are multiplying by the period of the specified signal
     def mult = (269 / 8192) / freq
     logDebug("pulse mult = ${mult}")
     
@@ -179,38 +218,15 @@ def buildBroadlinkFromProntoCodes(codes)
     def pairsCnt2 = codes[3]
     
     def strCode = ""
-    byte[] tmpCode
-    def codeVal
     
     for(i = 4; i < 2*(pairsCnt1 + pairsCnt2) + 4; i++)
     {
-        codeVal = (codes[i] * mult).toInteger()
-        
-        if(codeVal <= 0xFF)
-        {
-            tmpCode = [codeVal]            
-        }
-        else
-        {
-            // leading zero, then big-endian if larger than one byte
-            tmpCode = [0, 0xFF & (codeVal >> 8), 0xFF & codeVal]
-        }
-
-        strCode += HexUtils.byteArrayToHexString(tmpCode)
+        strCode += encodeValToCode(codes[i], mult)
     }
     
     logDebug("raw pronto conversion: ${strCode}")
     
-    // length of raw conversion (no header, no leadout)
-    def len = HexUtils.hexStringToByteArray(strCode).size()
-    len = HexUtils.byteArrayToHexString([0xFF & len, 0xFF & (len >> 8)] as byte[])
-    
-    strCode = "2600" + len + strCode
-    
-    // IR leadout (standard)
-    strCode += HexUtils.byteArrayToHexString([0x0d, 0x05] as byte[])
-    
-    return strCode
+    return prepCodeStr(strCode)
 }
 
 def parseProntoStringToCodes(pronto)
@@ -253,6 +269,180 @@ def validateProntoCodes(codes)
     }
     
     return [pairsCnt1: pairsCnt1, pairsCnt2: pairsCnt2]
+}
+
+def generateCodesFromLircBits(numBits, codeVal, lircSpec)
+{
+    def strCode = ""
+    
+    // here we are multiplying by actual times (in us)
+    def mult = (269 / 8192)
+    
+    for(int i = numBits - 1; i >= 0; i--)
+    {
+        if((codeVal >> i) & 0x01)
+        {
+            strCode += encodeValToCode(lircSpec.one.high, mult)
+            strCode += encodeValToCode(lircSpec.one.low, mult)
+        }
+        else
+        {
+            strCode += encodeValToCode(lircSpec.zero.high, mult)
+            strCode += encodeValToCode(lircSpec.zero.low, mult)
+        }
+    }
+    
+    return strCode
+}
+
+def buildBroadlinkFromLircCode(Map lircSpec)
+{
+    if([lircSpec, lircSpec.code, lircSpec.bits].contains(null))
+    {
+        logDebug("lirc error: invalid spec")
+        return        
+    }
+    
+    def strCode = ""
+    
+    // here we are multiplying by actual times (in us)
+    def mult = (269 / 8192)
+    
+    if(lircSpec.header)
+    {
+        // any header data, if present
+        strCode += encodeValToCode(lircSpec.header.high, mult)
+        strCode += encodeValToCode(lircSpec.header.low, mult)
+    }
+    
+    if(lircSpec.pre_data && lircSpec.pre_data_bits)
+    {
+        // any pre_data, if present
+        strCode += generateCodesFromLircBits(lircSpec.pre_data_bits, lircSpec.pre_data, lircSpec)
+    }
+    
+    // the actual code
+    strCode += generateCodesFromLircBits(lircSpec.bits, lircSpec.code, lircSpec)
+    
+    if(lircSpec.post_data && lircSpec.post_data_bits)
+    {
+        // any post_data, if present
+        strCode += generateCodesFromLircBits(lircSpec.post_data_bits, lircSpec.post_data, lircSpec)
+    }
+    
+    if(lircSpec.ptrail)
+    {
+        // any ptrail, if present
+        strCode += encodeValToCode(lircSpec.ptrail, mult)        
+        // low value for ptrail is never(?) present, so just use the low value for a one
+        strCode += encodeValToCode(lircSpec.one.low, mult)
+    }
+    
+    logDebug("raw lirc conversion: ${strCode}")
+    
+    return prepCodeStr(strCode)
+}
+
+private _lircGetIntValsByName(input, name, countOfVals)
+{
+    def splitInput = input?.split()    
+    def idxName = splitInput.findIndexOf { it.toLowerCase() == name }
+    
+    if(-1 == idxName) { return }
+    
+    List retList = []    
+    for(int i = idxName + 1; i <= (idxName + countOfVals); i++)
+    {
+        thisVal = splitInput[i]
+        thisVal = thisVal.startsWith("0x") ? _turn0xStringIntoInt(thisVal) : thisVal
+        
+        retList += thisVal?.toInteger()
+    }
+    
+    return retList    
+}
+
+private _lircGetStringValByName(input, name)
+{
+    def splitInput = input?.split()    
+    def idxName = splitInput.findIndexOf { it.toLowerCase() == name }
+    
+    if(-1 == idxName) { return }
+    
+    return splitInput[idxName + 1]
+}
+
+def _turn0xStringIntoInt(hexString)
+{
+    if(!hexString) { return }
+    
+    // TODO: this will probably break for codes larger than 32 bits?
+    return new BigInteger(hexString?.replace("0x", ""), 16)?.toInteger()
+}
+
+def lircParseFile(input)
+{
+    // remove comment lines and empty lines (into cleanedInput)
+    def cleanedInput = ""
+    input?.eachLine
+    { line ->
+        if(line && !line?.trim()?.startsWith('#')) { cleanedInput += (line + "\n") }
+    }
+    
+    logDebug("cleanedInput file follows:")
+    logDebug(cleanedInput)
+    
+    input = cleanedInput
+
+    
+    // first, extract the basic lirc details...
+    
+    def one = _lircGetIntValsByName(input, "one", 2)
+    def zero = _lircGetIntValsByName(input, "zero", 2)
+    
+    def header = _lircGetIntValsByName(input, "header", 2)    
+    // header may not be in source file, so process it here first
+    if(header) { header = [high: header[0], low: header[1]] }
+    
+    def lircSpec =
+        [
+            name: _lircGetStringValByName(input, "name"),
+            bits: _lircGetIntValsByName(input, "bits", 1)?.get(0),
+            header: header,
+            one: [high: one[0], low: one[1]],
+            zero: [high: zero[0], low: zero[1]],
+            pre_data: _lircGetIntValsByName(input, "pre_data", 1)?.get(0),
+            pre_data_bits: _lircGetIntValsByName(input, "pre_data_bits", 1)?.get(0),
+            post_data: _lircGetIntValsByName(input, "post_data", 1)?.get(0),
+            post_data_bits: _lircGetIntValsByName(input, "post_data_bits", 1)?.get(0),
+            ptrail: _lircGetIntValsByName(input, "ptrail", 1)?.get(0)
+        ]
+    
+    // Get the text between 'begin codes' and 'end codes'
+    // Note: this will break if there is more than one such section in a lirc file
+    def codesInput = input.split('begin codes')?.getAt(1)?.split('end codes')
+    
+    logDebug("codesInput section follows:")
+    logDebug(codesInput)    
+    
+    // ...then, extract each code for processing
+    
+    def codeSpecs = []
+    codesInput?.getAt(0)?.eachLine
+    { line ->
+        line = line.split()
+        if(line.size() >= 2)
+        {
+            // prepend remote name to code name, if present
+            codeSpecs += [name: (lircSpec.name ? "${lircSpec.name}_" : "") + line[0], code: _turn0xStringIntoInt(line[1])]
+        }
+    }
+    
+    def finalSpec = [lircSpec: lircSpec, codeSpecs: codeSpecs]
+    logDebug("finalSpec follows:")
+    logDebug(finalSpec)
+    
+    return finalSpec
 }
 
 //////////////////////////////////////

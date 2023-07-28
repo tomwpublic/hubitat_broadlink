@@ -1,7 +1,7 @@
 {
   "packageName": "hubitat_broadlink",
   "author": "tomw",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2022-08-04",
   "bundles": [
@@ -32,7 +32,7 @@
     }  
   ],
   "licenseFile": "https://raw.githubusercontent.com/tomwpublic/hubitat_broadlink/main/LICENSE",
-  "releaseNotes": "0.9.9 - tomw - Make device keep-alive ping a configurable option, and disable by default for RM4 devices.\n0.9.8 - tomw - Fix for IllegalBlockSizeException.\n0.9.7 - tomw - Support for sensors (temperature and humidity).\n0.9.6 - tomw - Bugfixes and improved error reporting.\n0.9.5 - tomw - Added ping for RM3 devices as keep-alive.\n0.9.4 - tomw - Added 'sequence' scripting feature.\n0.9.3 - tomw - Rework app UI to use buttons.\n0.9.2 - tomw - Rename codes (supported in app).\n0.9.1 - tomw - Added push command, which uses the button name as a saved code to send.\n0.9.0 - tomw - Initial release.",
+  "releaseNotes": "0.9.10 - tomw - Added support for importing LIRC codes from file in local storage.\n0.9.9 - tomw - Make device keep-alive ping a configurable option, and disable by default for RM4 devices.\n0.9.8 - tomw - Fix for IllegalBlockSizeException.\n0.9.7 - tomw - Support for sensors (temperature and humidity).\n0.9.6 - tomw - Bugfixes and improved error reporting.\n0.9.5 - tomw - Added ping for RM3 devices as keep-alive.\n0.9.4 - tomw - Added 'sequence' scripting feature.\n0.9.3 - tomw - Rework app UI to use buttons.\n0.9.2 - tomw - Rename codes (supported in app).\n0.9.1 - tomw - Added push command, which uses the button name as a saved code to send.\n0.9.0 - tomw - Initial release.",
   "documentationLink": "https://github.com/tomwpublic/hubitat_broadlink/blob/main/README.md",
   "communityLink": "https://community.hubitat.com/t/broadlink-ir-rf-remotes-integration-rm3-mini-rm-pro-rm4-mini-rm4-pro-etc/98827"
 }
