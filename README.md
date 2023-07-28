@@ -87,7 +87,8 @@ Learning RF codes takes place in **two steps:** first, the range is swept to fin
 **Manage saved codes and import new codes into this app**
 
 * You can individually delete any codes stored in the app storage.
-* You can also import Pronto codes and the codeStore contents from a prior Hubitat community integration.  Other formats may be able to be added by request.
+* You can also import Pronto codes and the codeStore contents from a prior Hubitat community integration by pasting the string data into the input field.
+* LIRC files that are stored in Hubitat local file storage can be imported by name.  This feature is experimental, so please provide feedback on any files that don't import properly.
 
 # Disclaimer
 
